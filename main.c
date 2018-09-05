@@ -1,7 +1,3 @@
-/************** ECE2049 DEMO CODE ******************/
-/**************  22 August 2018   ******************/
-/***************************************************/
-
 #include <msp430.h>
 
 /* Peripherals.c and .h are where the functions that implement
@@ -12,7 +8,7 @@
 #include "peripherals.h"
 
 // Function Prototypes
-void swDelay(char numLoops);
+void swDelay(unsigned int numLoops);
 
 // Declare globals here
 
@@ -83,7 +79,7 @@ void main(void)
         if (currKey == '#')
             BuzzerOff();
         if ((currKey >= '0') && (currKey <= '9'))
-            setLeds(currKey - 0x30);
+            setLeds(0x0F);
 
         if (currKey)
         {
@@ -95,7 +91,7 @@ void main(void)
             Graphics_flushBuffer(&g_sContext);
 
             // wait awhile before clearing LEDs
-            swDelay(1);
+            swDelay(5000);
             setLeds(0);
         }
 
@@ -103,7 +99,7 @@ void main(void)
 }
 
 
-void swDelay(char numLoops)
+void swDelay(unsigned int numLoops)
 {
 	// This function is a software delay. It performs
 	// useless loops to waste a bit of time
@@ -118,7 +114,7 @@ void swDelay(char numLoops)
 
 	for (j=0; j<numLoops; j++)
     {
-    	i = 50000 ;					// SW Delay
+    	i = 50 ;					// SW Delay
    	    while (i > 0)				// could also have used while (i)
 	       i--;
     }
