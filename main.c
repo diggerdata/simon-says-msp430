@@ -16,6 +16,8 @@ void swDelay(unsigned int numLoops);
 void main(void)
 
 {
+
+	//hello world
     unsigned char currKey=0, dispSz = 3;
     unsigned char dispThree[3];
 
