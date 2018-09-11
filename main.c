@@ -97,50 +97,50 @@ void countdown() {
 }
 
 void playSequence() {
-//    unsigned int delay = 1000-(1000*(3*round)/124); // Delay that speeds up
-    unsigned int delay = 1000;
+    unsigned int delay = 1000-(1000*(3*round)/124); // Delay that speeds up
+//    unsigned int delay = 1000;
     unsigned int i;
     for(i = 0; i <= round; i++) {
         switch(colors[i]) {
             case 0:
-                setLeds(BIT1);
+                setLeds(0x08);
                 Graphics_clearDisplay(&g_sContext); // Clear the display
                 Graphics_drawStringCentered(&g_sContext, "1", AUTO_STRING_LENGTH, 48, 25, TRANSPARENT_TEXT);
                 Graphics_flushBuffer(&g_sContext);
-                BuzzerOn;
+                BuzzerOn();
                 swDelay(delay);
                 setLeds(0);
-                BuzzerOff;
+                BuzzerOff();
                 break;
             case 1:
-                setLeds(BIT2);
+                setLeds(0x04);
                 Graphics_clearDisplay(&g_sContext); // Clear the display
                 Graphics_drawStringCentered(&g_sContext, "2", AUTO_STRING_LENGTH, 48, 25, TRANSPARENT_TEXT);
                 Graphics_flushBuffer(&g_sContext);
-                BuzzerOn;
+                BuzzerOn();
                 swDelay(delay);
                 setLeds(0);
-                BuzzerOff;
+                BuzzerOff();
                 break;
             case 2:
-                setLeds(BIT3);
+                setLeds(0x02);
                 Graphics_clearDisplay(&g_sContext); // Clear the display
                 Graphics_drawStringCentered(&g_sContext, "3", AUTO_STRING_LENGTH, 48, 25, TRANSPARENT_TEXT);
                 Graphics_flushBuffer(&g_sContext);
-                BuzzerOn;
+                BuzzerOn();
                 swDelay(delay);
                 setLeds(0);
-                BuzzerOff;
+                BuzzerOff();
                 break;
             case 3:
-                setLeds(BIT4);
+                setLeds(0x01);
                 Graphics_clearDisplay(&g_sContext); // Clear the display
                 Graphics_drawStringCentered(&g_sContext, "4", AUTO_STRING_LENGTH, 48, 25, TRANSPARENT_TEXT);
                 Graphics_flushBuffer(&g_sContext);
-                BuzzerOn;
+                BuzzerOn();
                 swDelay(delay);
                 setLeds(0);
-                BuzzerOff;
+                BuzzerOff();
                 break;
         }
     }
@@ -156,25 +156,40 @@ void resetGame() {
 }
 
 void watchSequence() {
-    volatile unsigned int inputNum = 0;
+    unsigned int inputNum = 0;
     unsigned char currKey = getKey();
-    unsigned char lastKey = currKey;
     while(1) {
         currKey = getKey();
         unsigned int intKey = (currKey - '0') - 1;
-        if(colors[inputNum] == intKey && currKey != lastKey) {
+        if(colors[inputNum] == intKey && currKey != 0) {
             if(round == inputNum) {
                 state = 2;
                 round++;
                 break;
             }
             inputNum++;
+            while (1)
+            {
+                currKey = getKey();
+                if (currKey == 0)
+                {
+                    break;
+                }
+            }
         }
-        else if(currKey != lastKey && colors[inputNum] != intKey) {
+        else if(currKey != 0 && colors[inputNum] != intKey) {
+            state = 0;
+            Graphics_clearDisplay(&g_sContext); // Clear the display
+            Graphics_drawStringCentered(&g_sContext, "YOU LOSE", AUTO_STRING_LENGTH, 48, 25, TRANSPARENT_TEXT);
+            Graphics_flushBuffer(&g_sContext);
+            swDelay(1000);
+            Graphics_clearDisplay(&g_sContext);
+            break;
+        }
+        if(currKey == '*') {
             state = 0;
             break;
         }
-        lastKey = currKey;
     }
 }
 
