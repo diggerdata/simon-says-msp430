@@ -1,5 +1,5 @@
 #include <msp430.h>
-
+#include <stdlib.h>
 /* Peripherals.c and .h are where the functions that implement
  * the LEDs and keypad, etc are. It is often useful to organize
  * your code by putting like functions together in files.
@@ -8,96 +8,174 @@
 #include "peripherals.h"
 
 // Function Prototypes
+void startupScreen();
+void countdown();
+void playSequence();
+void resetGame();
+void watchSequence();
 void swDelay(unsigned int numLoops);
 
 // Declare globals here
 
+// Initialize state to 0
+unsigned int state = 0;
+unsigned int round = 0;
+// Create all the game colors
+#define NUM_ROUNDS 32
+unsigned int colors[32];
+
+// *** Intro Screen ***
+
+
 // Main
-void main(void)
-
-{
-
-	//hello world
+void main(void) {
+    WDTCTL = WDTPW | WDTHOLD;
+    // Useful code starts here
     unsigned char currKey=0, dispSz = 3;
     unsigned char dispThree[3];
 
-    // Define some local variables
-    float a_flt = 190.68;
-    int  test = 0x0600, i=0;     // In C prefix 0x means the number that follows is in hex
-    long unsigned X= 123456;    // No prefix so number is assumed to be in decimal
-    unsigned char myGrade='A';
-    unsigned char initial='S';
-    //unsigned char your_name[14] = "Your Name Here";
-                                    // What happens when you change the array length?
-                                    // What should it be? Do you need null terminator /n ?
-
-
-    WDTCTL = WDTPW | WDTHOLD;    // Stop watchdog timer. Always need to stop this!!
-                                 // You can then configure it properly, if desired
-
-    // Some utterly useless instructions -- Step through them
-    // What size does the Code Composer MSP430 Compiler use for the
-    // following variable types? A float, an int, a long integer and a char?
-    a_flt = a_flt*test;
-    X = test+X;
-    test = test-myGrade;    // A number minus a letter?? What's actually going on here?
-                            // What value stored in myGrade (i.e. what's the ASCII code for "A")?
-                            // Thus, what is the new value of test? Explain?
-
-    // Useful code starts here
     initLeds();
-
     configDisplay();
     configKeypad();
-
-    // *** Intro Screen ***
     Graphics_clearDisplay(&g_sContext); // Clear the display
-
-    // Write some text to the display
-    Graphics_drawStringCentered(&g_sContext, "Welcome", AUTO_STRING_LENGTH, 48, 15, TRANSPARENT_TEXT);
-    Graphics_drawStringCentered(&g_sContext, "to", AUTO_STRING_LENGTH, 48, 25, TRANSPARENT_TEXT);
-    Graphics_drawStringCentered(&g_sContext, "ECE204-A18!", AUTO_STRING_LENGTH, 48, 35, TRANSPARENT_TEXT);
-
-    // Draw a box around everything because it looks nice
-    Graphics_Rectangle box = {.xMin = 5, .xMax = 91, .yMin = 5, .yMax = 91 };
-    Graphics_drawRectangle(&g_sContext, &box);
-
     // We are now done writing to the display.  However, if we stopped here, we would not
     // see any changes on the actual LCD.  This is because we need to send our changes
     // to the LCD, which then refreshes the display.
     // Since this is a slow operation, it is best to refresh (or "flush") only after
     // we are done drawing everything we need.
-    Graphics_flushBuffer(&g_sContext);
-
-    dispThree[0] = ' ';
-    dispThree[2] = ' ';
+//    Graphics_flushBuffer(&g_sContext);
 
     while (1)    // Forever loop
     {
-        // Check if any keys have been pressed on the 3x4 keypad
-        currKey = getKey();
-        if (currKey == '*')
-            BuzzerOn();
-        if (currKey == '#')
-            BuzzerOff();
-        if ((currKey >= '0') && (currKey <= '9'))
-            setLeds(0x0F);
-
-        if (currKey)
-        {
-            dispThree[1] = currKey;
-            // Draw the new character to the display
-            Graphics_drawStringCentered(&g_sContext, dispThree, dispSz, 48, 55, OPAQUE_TEXT);
-
-            // Refresh the display so it shows the new data
-            Graphics_flushBuffer(&g_sContext);
-
-            // wait awhile before clearing LEDs
-            swDelay(5000);
-            setLeds(0);
+        unsigned char currKey = getKey();
+        switch(state) {
+            case 0:
+                startupScreen(); // Show startup screen
+                break;
+            case 1:
+                resetGame();
+                countdown(); // Show the countdown
+                break;
+            case 2:
+                playSequence(); // Play the sequence
+                break;
+            case 3:
+                watchSequence(); // Watch for user input
+                break;
         }
 
+        // Check if any keys have been pressed on the 3x4 keypad
+
+        if (currKey == '*')
+            state = 1; // Go to state 1 (countdown)
     }  // end while (1)
+}
+
+void startupScreen() {
+//    setLeds(0x01);
+//    Graphics_clearDisplay(&g_sContext); // Clear the display
+    Graphics_drawStringCentered(&g_sContext, "ECE2049 SIMON", AUTO_STRING_LENGTH, 48, 15, TRANSPARENT_TEXT);
+    Graphics_drawStringCentered(&g_sContext, "Press * to start", AUTO_STRING_LENGTH, 48, 25, TRANSPARENT_TEXT);
+    Graphics_flushBuffer(&g_sContext);
+}
+
+void countdown() {
+   Graphics_clearDisplay(&g_sContext); // Clear the display
+   Graphics_drawStringCentered(&g_sContext, "3", AUTO_STRING_LENGTH, 48, 25, TRANSPARENT_TEXT);
+   Graphics_flushBuffer(&g_sContext);
+   swDelay(1000);
+   Graphics_clearDisplay(&g_sContext);
+   Graphics_drawStringCentered(&g_sContext, "2", AUTO_STRING_LENGTH, 48, 25, TRANSPARENT_TEXT);
+   Graphics_flushBuffer(&g_sContext);
+   swDelay(1000);
+   Graphics_clearDisplay(&g_sContext);
+   Graphics_drawStringCentered(&g_sContext, "1", AUTO_STRING_LENGTH, 48, 25, TRANSPARENT_TEXT);
+   Graphics_flushBuffer(&g_sContext);
+   swDelay(1000);
+   Graphics_clearDisplay(&g_sContext);
+   state = 2; // Set the state to 2 (playSequence)
+}
+
+void playSequence() {
+//    unsigned int delay = 1000-(1000*(3*round)/124); // Delay that speeds up
+    unsigned int delay = 1000;
+    unsigned int i;
+    for(i = 0; i <= round; i++) {
+        switch(colors[i]) {
+            case 0:
+                setLeds(BIT1);
+                Graphics_clearDisplay(&g_sContext); // Clear the display
+                Graphics_drawStringCentered(&g_sContext, "1", AUTO_STRING_LENGTH, 48, 25, TRANSPARENT_TEXT);
+                Graphics_flushBuffer(&g_sContext);
+                BuzzerOn;
+                swDelay(delay);
+                setLeds(0);
+                BuzzerOff;
+                break;
+            case 1:
+                setLeds(BIT2);
+                Graphics_clearDisplay(&g_sContext); // Clear the display
+                Graphics_drawStringCentered(&g_sContext, "2", AUTO_STRING_LENGTH, 48, 25, TRANSPARENT_TEXT);
+                Graphics_flushBuffer(&g_sContext);
+                BuzzerOn;
+                swDelay(delay);
+                setLeds(0);
+                BuzzerOff;
+                break;
+            case 2:
+                setLeds(BIT3);
+                Graphics_clearDisplay(&g_sContext); // Clear the display
+                Graphics_drawStringCentered(&g_sContext, "3", AUTO_STRING_LENGTH, 48, 25, TRANSPARENT_TEXT);
+                Graphics_flushBuffer(&g_sContext);
+                BuzzerOn;
+                swDelay(delay);
+                setLeds(0);
+                BuzzerOff;
+                break;
+            case 3:
+                setLeds(BIT4);
+                Graphics_clearDisplay(&g_sContext); // Clear the display
+                Graphics_drawStringCentered(&g_sContext, "4", AUTO_STRING_LENGTH, 48, 25, TRANSPARENT_TEXT);
+                Graphics_flushBuffer(&g_sContext);
+                BuzzerOn;
+                swDelay(delay);
+                setLeds(0);
+                BuzzerOff;
+                break;
+        }
+    }
+    state = 3; // Go to wait for input
+}
+
+void resetGame() {
+    round = 0;
+    unsigned int j;
+    for (j = 0; j < 32; j++) {
+        colors[j] = rand() % 4;
+    }
+}
+
+void watchSequence() {
+    volatile unsigned int inputNum = 0;
+    unsigned char currKey = getKey();
+    unsigned char lastKey = currKey;
+    while(1) {
+        currKey = getKey();
+        unsigned int intKey = (currKey - '0') - 1;
+        if(colors[inputNum] == intKey && currKey != lastKey) {
+            if(round == inputNum) {
+                state = 2;
+                round++;
+                break;
+            }
+            inputNum++;
+        }
+        else if(currKey != lastKey && colors[inputNum] != intKey) {
+            state = 0;
+            break;
+        }
+        lastKey = currKey;
+    }
 }
 
 
