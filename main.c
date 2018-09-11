@@ -104,43 +104,35 @@ void playSequence() {
         switch(colors[i]) {
             case 0:
                 setLeds(0x08);
-                Graphics_clearDisplay(&g_sContext); // Clear the display
-                Graphics_drawStringCentered(&g_sContext, "1", AUTO_STRING_LENGTH, 48, 25, TRANSPARENT_TEXT);
-                Graphics_flushBuffer(&g_sContext);
-                BuzzerOn();
+                BuzzerOn(75);
                 swDelay(delay);
                 setLeds(0);
                 BuzzerOff();
+                swDelay(delay);
                 break;
             case 1:
                 setLeds(0x04);
-                Graphics_clearDisplay(&g_sContext); // Clear the display
-                Graphics_drawStringCentered(&g_sContext, "2", AUTO_STRING_LENGTH, 48, 25, TRANSPARENT_TEXT);
-                Graphics_flushBuffer(&g_sContext);
-                BuzzerOn();
+                BuzzerOn(125);
                 swDelay(delay);
                 setLeds(0);
                 BuzzerOff();
+                swDelay(delay);
                 break;
             case 2:
                 setLeds(0x02);
-                Graphics_clearDisplay(&g_sContext); // Clear the display
-                Graphics_drawStringCentered(&g_sContext, "3", AUTO_STRING_LENGTH, 48, 25, TRANSPARENT_TEXT);
-                Graphics_flushBuffer(&g_sContext);
-                BuzzerOn();
+                BuzzerOn(175);
                 swDelay(delay);
                 setLeds(0);
                 BuzzerOff();
+                swDelay(delay);
                 break;
             case 3:
                 setLeds(0x01);
-                Graphics_clearDisplay(&g_sContext); // Clear the display
-                Graphics_drawStringCentered(&g_sContext, "4", AUTO_STRING_LENGTH, 48, 25, TRANSPARENT_TEXT);
-                Graphics_flushBuffer(&g_sContext);
-                BuzzerOn();
+                BuzzerOn(225);
                 swDelay(delay);
                 setLeds(0);
                 BuzzerOff();
+                swDelay(delay);
                 break;
         }
     }
@@ -158,13 +150,19 @@ void resetGame() {
 void watchSequence() {
     unsigned int inputNum = 0;
     unsigned char currKey = getKey();
+    Graphics_clearDisplay(&g_sContext); // Clear the display
     while(1) {
         currKey = getKey();
         unsigned int intKey = (currKey - '0') - 1;
         if(colors[inputNum] == intKey && currKey != 0) {
+            unsigned char disp[1] = currKey;
+            Graphics_clearDisplay(&g_sContext); // Clear the display
+            Graphics_drawStringCentered(&g_sContext, disp, AUTO_STRING_LENGTH, (intKey*15)+20, 25, TRANSPARENT_TEXT);
+            Graphics_flushBuffer(&g_sContext);
             if(round == inputNum) {
                 state = 2;
                 round++;
+                swDelay(1000);
                 break;
             }
             inputNum++;
